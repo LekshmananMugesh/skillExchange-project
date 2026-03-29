@@ -3,15 +3,12 @@ package SkillExchange.Backend.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web
-        .builders.HttpSecurity;
-import org.springframework.security.config.annotation.web
-        .configuration.EnableWebSecurity;
-import org.springframework.security.config.http
-        .SessionCreationPolicy;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication
-        .UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -25,29 +22,28 @@ public class SecurityConfig {
             throws Exception {
 
         http
-                // disable CSRF — not needed for REST APIs
-                .csrf(csrf -> csrf.disable())
+                // disable csrf
+                .csrf(AbstractHttpConfigurer::disable)
+
+                // disable default form login
+                .formLogin(AbstractHttpConfigurer::disable)
+
+                // disable basic auth popup
+                .httpBasic(AbstractHttpConfigurer::disable)
 
                 // URL rules
                 .authorizeHttpRequests(auth -> auth
-                        // these URLs are open — no token needed
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/api-docs/**"
-                        ).permitAll()
-                        // everything else needs a token
+                        .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
-                // no sessions — JWT handles everything
+                // no sessions
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS)
                 )
 
-                // add JWT filter before default Spring filter
+                // add jwt filter
                 .addFilterBefore(jwtFilter,
                         UsernamePasswordAuthenticationFilter.class);
 

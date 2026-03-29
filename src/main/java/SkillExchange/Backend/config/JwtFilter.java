@@ -30,43 +30,48 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain chain)
             throws ServletException, IOException {
 
-        // read Authorization header
         String header = request.getHeader("Authorization");
 
         String token = null;
         String email = null;
 
-        // check if header has Bearer token
         if (header != null && header.startsWith("Bearer ")) {
             token = header.substring(7);
-            email = jwtUtil.getEmail(token);
-        }
 
-        // if email found and not already authenticated
-        if (email != null && SecurityContextHolder
-                .getContext().getAuthentication() == null) {
-
-            // validate token
-            if (!jwtUtil.isExpired(token)) {
-
-                // mark user as authenticated
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(
-                                email, null, new ArrayList<>()
-                        );
-
-                auth.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
-
-                SecurityContextHolder
-                        .getContext()
-                        .setAuthentication(auth);
+            // wrap in try-catch so expired token
+            // does not crash the app
+            try {
+                email = jwtUtil.getEmail(token);
+            } catch (Exception e) {
+                // token expired or invalid — just ignore
+                // request will be blocked by security automatically
             }
         }
 
-        // continue the request
+        if (email != null && SecurityContextHolder
+                .getContext().getAuthentication() == null) {
+
+            try {
+                if (!jwtUtil.isExpired(token)) {
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    email, null, new ArrayList<>()
+                            );
+                    auth.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
+                    );
+                    SecurityContextHolder
+                            .getContext()
+                            .setAuthentication(auth);
+                }
+            } catch (Exception e) {
+                // token expired — do nothing
+                // spring security will return 403 automatically
+            }
+        }
+
         chain.doFilter(request, response);
     }
+
 }
