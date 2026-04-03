@@ -11,6 +11,8 @@ public class Request {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Long teacherId;
+
     private Long learnerId;
 
     private Long skillId;
@@ -32,11 +34,14 @@ public class Request {
     public Long getSkillId() { return skillId; }
     public String getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-
+    public Long getTeacherId() { return teacherId; }
     // setters
     public void setId(Long id) { this.id = id; }
     public void setLearnerId(Long learnerId) { this.learnerId = learnerId; }
     public void setSkillId(Long skillId) { this.skillId = skillId; }
     public void setStatus(String status) { this.status = status; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
+    }
 }
