@@ -11,16 +11,20 @@ public class Request {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long teacherId;
-
+    @Column(name = "learner_id")
     private Long learnerId;
 
+    @Column(name = "skill_id")
     private Long skillId;
+
+    @Column(name = "teacher_id")
+    private Long teacherId;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     // OPEN → MATCHED → CLOSED
     private String status;
-
-    private LocalDateTime createdAt;
 
     @PrePersist
     public void prePersist() {

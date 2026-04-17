@@ -1,6 +1,7 @@
 package SkillExchange.Backend.controller;
-
+import SkillExchange.Backend.model.User;
 import SkillExchange.Backend.config.JwtUtil;
+import SkillExchange.Backend.repository.UserRepository;
 import SkillExchange.Backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,9 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserRepository userRepository;
 
     // POST /api/auth/register
     @PostMapping("/register")
@@ -51,5 +55,24 @@ public class AuthController {
         String email = jwtUtil.getEmail(token);
 
         return authService.logout(email);
+    }
+
+    // GET /api/auth/credits
+    @GetMapping("/credits")
+    public Map<String, Integer> getCredits(
+            @RequestHeader("Authorization") String header) {
+
+        // get email from token
+        String token = header.substring(7);
+        String email = jwtUtil.getEmail(token);
+
+        // find user
+        User user = userRepository
+                .findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        return Map.of("credits", user.getCredits());
     }
 }

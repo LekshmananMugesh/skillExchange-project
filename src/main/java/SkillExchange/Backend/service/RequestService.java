@@ -49,8 +49,7 @@ public class RequestService {
                 .findByName(skillName)
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "Skill not found. " +
-                                        "Make sure the skill name is correct")
+                                "Skill not found")
                 );
 
         // save request with status OPEN
@@ -59,42 +58,41 @@ public class RequestService {
         request.setSkillId(skill.getId());
         requestRepository.save(request);
 
-        // find a teacher for this skill
-        List<UserSkill> teachers = userSkillRepository
-                .findByUserIdAndType(
-                        learner.getId(), "teach");
-
         // find teacher who teaches this skill
         // and is not the learner themselves
-        Optional<UserSkill> matchedTeacher = userSkillRepository
-                .findAll()
-                .stream()
-                .filter(us ->
-                        us.getSkillId().equals(skill.getId()) &&
-                                us.getType().equals("teach") &&
-                                !us.getUserId().equals(learner.getId())
-                )
-                .findFirst();
+        Optional<UserSkill> matchedTeacher =
+                userSkillRepository
+                        .findAll()
+                        .stream()
+                        .filter(us ->
+                                us.getSkillId().equals(skill.getId()) &&
+                                        us.getType().equals("teach") &&
+                                        !us.getUserId().equals(learner.getId())
+                        )
+                        .findFirst();
 
         if (matchedTeacher.isEmpty()) {
-            // no teacher found — request stays OPEN
             response.put("status", "OPEN");
             response.put("message",
-                    "Request posted. " +
-                            "No teacher found yet.");
+                    "Request posted. No teacher found yet.");
             return response;
         }
 
-        // teacher found — update request to MATCHED
-        request.setStatus("MATCHED");
-        requestRepository.save(request);
-
-        // get teacher details
+        // get teacher user
         User teacher = userRepository
                 .findById(matchedTeacher.get().getUserId())
                 .orElseThrow(() ->
                         new RuntimeException("Teacher not found")
                 );
+
+        // save teacherId and status MATCHED
+        request.setStatus("MATCHED");
+        request.setTeacherId(teacher.getId());
+        requestRepository.save(request);
+
+        // verify it saved
+        System.out.println("Request saved with teacherId: "
+                + teacher.getId());
 
         response.put("status", "MATCHED");
         response.put("message", "Teacher found!");
@@ -102,6 +100,8 @@ public class RequestService {
         response.put("teacherEmail", teacher.getEmail());
         response.put("requestId",
                 request.getId().toString());
+        response.put("teacherId",
+                teacher.getId().toString());
 
         return response;
     }
@@ -110,25 +110,21 @@ public class RequestService {
     public List<Map<String, String>> getMyRequests(
             String email) {
 
-        // get learner
         User learner = userRepository
                 .findByEmail(email)
                 .orElseThrow(() ->
                         new RuntimeException("User not found")
                 );
 
-        // get all requests for this learner
         List<Request> requests = requestRepository
                 .findByLearnerId(learner.getId());
 
-        // convert to readable format
         return requests.stream().map(req -> {
             Map<String, String> map = new HashMap<>();
             map.put("requestId", req.getId().toString());
             map.put("status", req.getStatus());
-            map.put("createdAt", req.getCreatedAt().toString());
-
-            // get skill name
+            map.put("createdAt",
+                    req.getCreatedAt().toString());
             skillRepository.findById(req.getSkillId())
                     .ifPresent(s ->
                             map.put("skillName", s.getName())

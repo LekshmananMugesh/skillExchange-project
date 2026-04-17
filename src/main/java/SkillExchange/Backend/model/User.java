@@ -20,6 +20,7 @@ public class User {
 
     private int credits = 3;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist

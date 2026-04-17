@@ -44,10 +44,10 @@ public class SessionService {
                         new RuntimeException("Request not found")
                 );
 
-        // check request is matched
-        if (!request.getStatus().equals("MATCHED")) {
+        // check request has a teacher assigned
+        if (request.getTeacherId() == null) {
             throw new RuntimeException(
-                    "Request is not matched yet"
+                    "No teacher assigned to this request yet"
             );
         }
 
@@ -63,13 +63,19 @@ public class SessionService {
         // for now we pass it directly
         // we will fix this by storing teacherId in request
 
-        // create session
+        // create session with all correct values
         Session session = new Session();
+
+// add these print lines to debug
+        System.out.println("Setting learnerId: " + request.getLearnerId());
+        System.out.println("Setting teacherId: " + request.getTeacherId());
+        System.out.println("Setting skillId: " + request.getSkillId());
+
+        session.setLearnerId(request.getLearnerId());
         session.setTeacherId(request.getTeacherId());
+        session.setSkillId(request.getSkillId());
         session.setMeetLink(meetLink);
-        session.setScheduledAt(
-                LocalDateTime.parse(scheduledAt)
-        );
+        session.setScheduledAt(LocalDateTime.parse(scheduledAt));
         sessionRepository.save(session);
 
         // update request to CLOSED
@@ -120,7 +126,7 @@ public class SessionService {
         }
 
         // check join time — must be within 10 minutes
-        LocalDateTime now = LocalDateTime.now();
+       /* LocalDateTime now = LocalDateTime.now();
         LocalDateTime scheduledAt = session.getScheduledAt();
         LocalDateTime deadline = scheduledAt.plusMinutes(10);
 
@@ -128,7 +134,9 @@ public class SessionService {
             session.setStatus("INVALID");
             sessionRepository.save(session);
             return "Session INVALID — joined after 10 minutes";
-        }
+        }*/
+
+        LocalDateTime now = LocalDateTime.now();
 
         // mark who joined
         if (user.getId().equals(session.getLearnerId())) {
@@ -175,14 +183,14 @@ public class SessionService {
                         ? session.getLearnerJoinedAt()
                         : session.getTeacherJoinedAt();
 
-        long minutes = java.time.Duration
+        /*long minutes = java.time.Duration
                 .between(joinTime, LocalDateTime.now())
                 .toMinutes();
 
         if (minutes < 30) {
             return "Session must last at least 30 minutes. " +
                     "Current: " + minutes + " minutes";
-        }
+        }*/
 
         // mark confirmed
         if (user.getId().equals(session.getLearnerId())) {

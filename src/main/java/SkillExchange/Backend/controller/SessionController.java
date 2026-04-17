@@ -28,6 +28,7 @@ public class SessionController {
     // POST /api/sessions/create
     @PostMapping("/create")
     public Map<String, String> createSession(
+            @RequestHeader("Authorization") String header,
             @RequestBody Map<String, String> body) {
 
         return sessionService.createSession(
