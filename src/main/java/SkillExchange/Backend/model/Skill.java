@@ -10,7 +10,7 @@ public class Skill {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(unique = true , name ="name")
     private String name;
 
     // getters

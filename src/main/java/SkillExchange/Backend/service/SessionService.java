@@ -31,6 +31,9 @@ public class SessionService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Autowired
+    private NotificationService notificationService;
+
     // ── CREATE SESSION ───────────────────────────
     public Map<String, String> createSession(
             Long requestId,
@@ -145,10 +148,17 @@ public class SessionService {
             session.setTeacherJoinedAt(now);
         }
 
-        // if both joined → set ACTIVE
         if (session.getLearnerJoinedAt() != null &&
                 session.getTeacherJoinedAt() != null) {
             session.setStatus("ACTIVE");
+            sessionRepository.save(session);
+
+            // ADD — notify both users session is live
+            notificationService.sendSessionUpdate(
+                    session.getId(), "ACTIVE",
+                    session.getLearnerId(), session.getTeacherId()
+            );
+            return "Joined successfully. Session is now ACTIVE!";
         }
 
         sessionRepository.save(session);
@@ -210,6 +220,28 @@ public class SessionService {
             transferCredits(
                     session.getLearnerId(),
                     session.getTeacherId()
+            );
+
+            // ADD — fetch updated balances for live navbar update
+            User learner = userRepository
+                    .findById(session.getLearnerId())
+                    .orElseThrow(() ->
+                            new RuntimeException("Learner not found"));
+            User teacher = userRepository
+                    .findById(session.getTeacherId())
+                    .orElseThrow(() ->
+                            new RuntimeException("Teacher not found"));
+
+            // ADD — push live credit updates to both navbars
+            notificationService.sendCreditUpdate(
+                    session.getLearnerId(), learner.getCredits());
+            notificationService.sendCreditUpdate(
+                    session.getTeacherId(), teacher.getCredits());
+
+            // ADD — trigger auto-navigation to feedback on learner
+            notificationService.sendSessionUpdate(
+                    session.getId(), "COMPLETED",
+                    session.getLearnerId(), session.getTeacherId()
             );
 
             return "Session COMPLETED. Credits transferred!";

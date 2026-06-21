@@ -31,6 +31,9 @@ public class RequestService {
     @Autowired
     private UserSkillRepository userSkillRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     // ── CREATE REQUEST ───────────────────────────
     public Map<String, String> createRequest(
             String email, String skillName) {
@@ -93,6 +96,14 @@ public class RequestService {
         // verify it saved
         System.out.println("Request saved with teacherId: "
                 + teacher.getId());
+
+        // ADD — notify teacher in real time
+        notificationService.sendTeacherNotification(
+                teacher.getId(),
+                learner.getName(),
+                skillName,
+                request.getId()
+        );
 
         response.put("status", "MATCHED");
         response.put("message", "Teacher found!");

@@ -15,4 +15,11 @@ public interface UserSkillRepository
     // check if user already added this skill
     boolean existsByUserIdAndSkillIdAndType(
             Long userId, Long skillId, String type);
+
+    // ADD — get all users who teach a specific skill
+    // TeacherMatchService uses this to build the teacher list
+    // sorted by credits ascending on the service layer
+
+    List<UserSkill> findBySkillIdAndType(
+            Long skillId, String type);
 }

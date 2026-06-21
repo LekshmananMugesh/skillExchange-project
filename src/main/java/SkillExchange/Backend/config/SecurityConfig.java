@@ -17,49 +17,36 @@ public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
 
+    @Autowired
+    private CorsConfig corsConfig;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http)
-
-
             throws Exception {
 
         http
-            .cors(cors -> cors.configurationSource(request -> {
-                    var config = new org.springframework.web.cors
-                            .CorsConfiguration();
-                    config.setAllowedOrigins(
-                            java.util.List.of("http://localhost:3000"));
-                    config.setAllowedMethods(
-                            java.util.List.of("GET","POST","PUT","DELETE"));
-                    config.setAllowedHeaders(
-                            java.util.List.of("*"));
-                    config.setAllowCredentials(true);
-                    return config;
-                }))
-                // disable csrf
+                .cors(cors -> cors.configurationSource(
+                        corsConfig.corsConfigurationSource()
+                ))
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // disable default form login
                 .formLogin(AbstractHttpConfigurer::disable)
-
-                // disable basic auth popup
                 .httpBasic(AbstractHttpConfigurer::disable)
 
-                // URL rules
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/api/chat/ask").permitAll()
                         .anyRequest().authenticated()
                 )
 
-                // no sessions
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS)
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // add jwt filter
-                .addFilterBefore(jwtFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        jwtFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }

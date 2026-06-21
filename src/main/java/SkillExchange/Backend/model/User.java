@@ -23,6 +23,9 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "photo_url")
+    private String photoUrl;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -33,6 +36,7 @@ public class User {
     public String getName() { return name; }
     public String getEmail() { return email; }
     public String getPassword() { return password; }
+    public String getPhotoUrl() { return photoUrl; }
     public int getCredits() { return credits; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
@@ -42,6 +46,9 @@ public class User {
     public void setEmail(String email) { this.email = email; }
     public void setPassword(String password) {
         this.password = password;
+    }
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
     }
     public void setCredits(int credits) {
         this.credits = credits;

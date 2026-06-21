@@ -31,11 +31,7 @@ public class SkillController {
             @RequestBody Map<String, String> body) {
 
         String email = getEmail(header);
-        return skillService.addSkill(
-                email,
-                body.get("skillName"),
-                "teach"
-        );
+        return skillService.addSkill(email, body.get("skillName"), "teach");
     }
 
     // POST /api/skills/learn

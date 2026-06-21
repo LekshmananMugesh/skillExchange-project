@@ -45,6 +45,29 @@ public class AuthController {
         return Map.of("token", token);
     }
 
+
+    // GET /api/auth/me
+    @GetMapping("/me")
+    public Map<String, Object> getMe(
+            @RequestHeader("Authorization") String header) {
+
+        String token = header.substring(7);
+        String email = jwtUtil.getEmail(token);
+
+        User user = userRepository
+                .findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        return Map.of(
+                "id",      user.getId(),
+                "name",    user.getName(),
+                "email",   user.getEmail(),
+                "credits", user.getCredits()
+        );
+    }
+
     // POST /api/auth/logout
     @PostMapping("/logout")
     public String logout(
